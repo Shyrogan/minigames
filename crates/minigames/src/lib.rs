@@ -13,9 +13,9 @@
 //!     app.add_plugins(MinigamesPlugin);
 //! }
 //!
-//! /// Queues a party; the queue moves it into a waiting game with room.
-//! fn queue_party(mut joins: MessageWriter<JoinQueue>, party: Vec<Entity>) {
-//!     joins.write(JoinQueue { game: BEDWARS, players: party });
+//! /// Queues a squad; the queue moves it into a waiting game with room.
+//! fn queue_squad(mut joins: MessageWriter<QueueMessage>, squad: Vec<Entity>) {
+//!     joins.write(QueueMessage::Join { game: BEDWARS, players: squad });
 //! }
 //!
 //! fn start_full_games(mut commands: Commands, games: Query<(Entity, Game<Waiting>)>) {
@@ -44,9 +44,9 @@ pub mod prelude {
     pub use minigames_core::GamePhaseCommands as _;
     pub use minigames_core::{
         Ending, Game, GameItem, GameLayer, GameLayerPlugin, GamePhase, GamePlayers, GameSlug,
-        InGame, InvalidGameSlug, LayerSpawn, Next, Running, Waiting,
+        InvalidGameSlug, Next, Playing, Running, Waiting,
     };
-    pub use minigames_queue::{EntryMembers, JoinQueue, QueueEntry, QueuePlugin, Queued};
+    pub use minigames_queue::{QueueMessage, QueuePlugin, Queued, Squad, Squadmates};
 
     pub use super::MinigamesPlugin;
 }

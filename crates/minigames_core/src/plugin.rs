@@ -5,7 +5,7 @@ use chunkedge::prelude::*;
 use crate::enter::enter_game;
 
 /// Moves players into a game layer when they enter its game (gain
-/// [`InGame`](crate::InGame)).
+/// [`Playing`](crate::Playing)).
 pub struct GameLayerPlugin;
 
 impl Plugin for GameLayerPlugin {

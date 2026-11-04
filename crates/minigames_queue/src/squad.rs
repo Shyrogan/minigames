@@ -1,17 +1,17 @@
-//! Queue entries: one entity per party waiting for a game, and its members.
+//! Squads: one entity per squad waiting for a game, and its squadmates.
 
 use chunkedge::prelude::*;
 use minigames_core::GameSlug;
 
-/// A party waiting for a game of `game`, on its own entity. Entries are
+/// A squad waiting for a game of `game`, on its own entity. Squads are
 /// served in ascending [`ticket`](Self::ticket) order.
 #[derive(Component, Clone, Debug)]
-pub struct QueueEntry {
+pub struct Squad {
     pub game: GameSlug,
     ticket: u64,
 }
 
-impl QueueEntry {
+impl Squad {
     pub(crate) fn new(game: GameSlug, tickets: &mut QueueTickets) -> Self {
         tickets.0 += 1;
         Self {
@@ -20,23 +20,23 @@ impl QueueEntry {
         }
     }
 
-    /// The entry's place in line: lower tickets are served first.
+    /// The squad's place in line: lower tickets are served first.
     pub fn ticket(&self) -> u64 {
         self.ticket
     }
 }
 
-/// The queue entry a player waits in. A player waits in at most one queue.
+/// The squad a player waits in. A player waits in at most one squad.
 #[derive(Component, Clone, Copy, PartialEq, Eq, Debug)]
-#[relationship(relationship_target = EntryMembers)]
+#[relationship(relationship_target = Squadmates)]
 pub struct Queued(pub Entity);
 
-/// The players of a queue entry, kept in sync by Bevy from [`Queued`].
+/// The players of a squad, kept in sync by Bevy from [`Queued`].
 #[derive(Component, Debug)]
 #[relationship_target(relationship = Queued)]
-pub struct EntryMembers(Vec<Entity>);
+pub struct Squadmates(Vec<Entity>);
 
-impl EntryMembers {
+impl Squadmates {
     pub fn players(&self) -> &[Entity] {
         &self.0
     }
@@ -46,8 +46,8 @@ impl EntryMembers {
 #[derive(Resource, Default, Debug)]
 pub(crate) struct QueueTickets(u64);
 
-/// Despawns an entry once its last member left: Bevy removes an emptied
-/// `EntryMembers`.
-pub(crate) fn despawn_empty_entry(remove: On<Remove, EntryMembers>, mut commands: Commands) {
+/// Despawns a squad once its last player left: Bevy removes an emptied
+/// `Squadmates`.
+pub(crate) fn despawn_empty_squad(remove: On<Remove, Squadmates>, mut commands: Commands) {
     commands.entity(remove.entity).try_despawn();
 }

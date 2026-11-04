@@ -5,11 +5,11 @@ mod common;
 
 use chunkedge::prelude::*;
 use chunkedge::protocol::packets::play::RespawnS2c;
-use common::{BEDWARS, SPAWN, app, connect, game_layer, lobby};
+use common::{BEDWARS, app, connect, game_layer, lobby};
 use minigames::prelude::*;
 
 #[test]
-fn a_queued_party_moves_into_a_waiting_game() {
+fn a_queued_squad_moves_into_a_waiting_game() {
     let mut app = app();
     let lobby = lobby(&mut app);
     let bedwars = game_layer(&mut app, BEDWARS, 4);
@@ -17,16 +17,15 @@ fn a_queued_party_moves_into_a_waiting_game() {
     let (bob, mut bob_helper) = connect(&mut app, lobby, "bob");
 
     app.world_mut()
-        .resource_mut::<Messages<JoinQueue>>()
-        .write(JoinQueue {
+        .resource_mut::<Messages<QueueMessage>>()
+        .write(QueueMessage::Join {
             game: BEDWARS,
             players: vec![alice, bob],
         });
     app.update();
 
     for (player, helper) in [(alice, &mut alice_helper), (bob, &mut bob_helper)] {
-        assert_eq!(app.world().get::<InGame>(player).unwrap().0, bedwars);
-        assert_eq!(app.world().get::<Position>(player).unwrap().0, SPAWN.pos);
+        assert_eq!(app.world().get::<Playing>(player).unwrap().0, bedwars);
         helper.collect_received().assert_count::<RespawnS2c>(1);
     }
 }

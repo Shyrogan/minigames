@@ -1,35 +1,25 @@
-//! Putting parties in a queue.
+//! Putting squads in a queue.
 
 use chunkedge::prelude::*;
-use minigames_core::{GameSlug, InGame};
+use minigames_core::Playing;
 
-use crate::entry::{QueueEntry, QueueTickets, Queued};
-
-/// Puts `players` in line for `game`, as one party: they enter the same game
-/// together. Players queued elsewhere switch to this queue. Ignored if the
-/// party is empty or one of its players is in a game already.
-#[derive(Message, Clone, Debug)]
-pub struct JoinQueue {
-    pub game: GameSlug,
-    pub players: Vec<Entity>,
-}
+use crate::message::QueueMessage;
+use crate::squad::{QueueTickets, Queued, Squad};
 
 pub(crate) fn join_queues(
-    mut joins: MessageReader<JoinQueue>,
+    mut messages: MessageReader<QueueMessage>,
     mut tickets: ResMut<QueueTickets>,
-    in_game: Query<(), With<InGame>>,
+    playing: Query<(), With<Playing>>,
     mut commands: Commands,
 ) {
-    for JoinQueue { game, players } in joins.read() {
-        if players.is_empty() || players.iter().any(|&player| in_game.contains(player)) {
+    for QueueMessage::Join { game, players } in messages.read() {
+        if players.is_empty() || players.iter().any(|&player| playing.contains(player)) {
             continue;
         }
-        let entry = commands
-            .spawn(QueueEntry::new(game.clone(), &mut tickets))
-            .id();
+        let squad = commands.spawn(Squad::new(game.clone(), &mut tickets)).id();
         for &player in players {
-            // Replacing `Queued` takes the player out of its previous entry.
-            commands.entity(player).try_insert(Queued(entry));
+            // Replacing `Queued` takes the player out of its previous squad.
+            commands.entity(player).try_insert(Queued(squad));
         }
     }
 }

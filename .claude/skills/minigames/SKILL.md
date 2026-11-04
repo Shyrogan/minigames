@@ -5,11 +5,11 @@ description: Design rules, invariants and ChunkEdge/Bevy 0.19 gotchas of the `mi
 
 # minigames
 
-A Rust library for a ChunkEdge mini game server: layers that hold games, and a queue that moves parties into a game with room. Terms (game, game slug, game layer, layer spawn, phase, player in game, party, queue entry) are defined in [`GLOSSARY.md`](../../../GLOSSARY.md); use them exactly, in code and prose.
+A Rust library for a ChunkEdge mini game server: layers that hold games, and a queue that moves squads into a game with room. Terms (game, game slug, game layer, phase, player in game, squad, queue status) are defined in the glossaries listed in [`GLOSSARY-MAP.md`](../../../GLOSSARY-MAP.md), one per crate; use them exactly, in code and prose.
 
 ## Minimal by default
 
-The idea is simple; keep the code and tests that small. Build the fewest features that deliver the behaviour asked for, and let state live in components a caller can read (`Queued`, `InGame`) rather than adding report messages, configuration, reasons or extra system sets. Test each behaviour once, at the lowest level that shows it. Propose anything beyond that to the user before writing it.
+The idea is simple; keep the code and tests that small. Build the fewest features that deliver the behaviour asked for, and let state live in components a caller can read (`Queued`, `Playing`) rather than adding report messages, configuration, reasons or extra system sets. Test each behaviour once, at the lowest level that shows it. Propose anything beyond that to the user before writing it.
 
 ## Phase-typed design
 
@@ -23,9 +23,10 @@ The library's core idea: a game's phase is a **type**, so the compiler rejects c
 ## Invariants
 
 - **One phase per layer.** The `keep_only` insert hook removes the other phases, so even a hand-inserted marker keeps the invariant.
-- **One game per player.** `InGame(layer)` is a Bevy relationship whose target `GamePlayers` Bevy keeps in sync; despawning a layer strips `InGame` from its players and keeps the players.
-- **Inserting `InGame` moves the player** into the game layer, at its `LayerSpawn` (`enter.rs`): it repoints `EntityLayerId` and `VisibleChunkLayer`, swaps the old layer for the game layer in `VisibleEntityLayers` (other visible layers stay), and sets `Position`, `Look` and `RespawnPosition`. ChunkEdge then sends the respawn. Use ChunkEdge's vocabulary: a world is a *layer*.
-- **Queued or in a game, never both.** A party with a player in a game can't queue, and the queue removes `Queued` as it inserts `InGame`.
+- **One game per player.** `Playing(layer)` is a Bevy relationship whose target `GamePlayers` Bevy keeps in sync; despawning a layer strips `Playing` from its players and keeps the players.
+- **Inserting `Playing` moves the player into the game layer** (`enter.rs`): it repoints `EntityLayerId` and `VisibleChunkLayer` and swaps the old layer for the game layer in `VisibleEntityLayers` (other visible layers stay). ChunkEdge then sends the respawn. Use ChunkEdge's vocabulary: a world is a *layer*.
+- **The library owns membership and layers, nothing more.** Positions, looks and spawn points belong to ChunkEdge (`Position`, `Look`, the client's `RespawnPosition`) and are set by the game. Before adding a concept, check whether ChunkEdge already has it, and reuse it.
+- **Queued or in a game, never both.** A squad with a player in a game can't queue, and the queue removes `Queued` as it inserts `Playing`.
 - **Capacity is advisory.** Whoever adds a player checks `free_slots()` of the `Game<Waiting>` first; core counts over-capacity layers as zero free slots.
 - **Slugs are valid by construction.** Known games are `const X: GameSlug = GameSlug::from_static("x")`, checked at build time; runtime input goes through `GameSlug::new`.
 
@@ -43,10 +44,11 @@ The library's core idea: a game's phase is a **type**, so the compiler rejects c
 - Workspace crates under `crates/`: `minigames_core` (shared types), one crate per feature (`minigames_queue`), and `minigames` as the umbrella re-exporting them behind `MinigamesPlugin`.
 - One responsibility per file. `lib.rs` holds only crate docs, `mod` lines and re-exports.
 - Every public item is exported through `minigames::prelude`; the `minigames-prelude` skill has the rules. How a game uses the library is in the `minigames-game` skill; update it when the public API changes.
+- Every stateful object has a state machine in `crates/<crate>/docs/<object>.md`: a mermaid diagram and a table of each edge and when it fires, linked from the crate's glossary. Change it in the same change as the behaviour, and add one for each new stateful object.
 - Unit tests live in one `#[cfg(test)] mod tests` per crate: `src/tests/mod.rs` holds the shared fixtures, and `src/tests/<module>.rs` tests `src/<module>.rs`, with sentence-like names (`a_started_game_has_no_free_slots`), on a bare Bevy `World` or `App`. Source files carry production code only.
 - End-to-end tests with real ChunkEdge mock clients live only in `crates/minigames/tests/`; share the fixture in `tests/common/mod.rs` (`app()`, `lobby`, `game_layer`, `connect`).
 - Prove a compile-time guarantee with a `compile_fail` doctest beside a passing one, as `GameSlug::from_static` and `transition` do.
 
 ## Done
 
-The work is done when `nix flake check` passes (clippy `--deny warnings`, every test, treefmt) and `GLOSSARY.md` names every new term.
+The work is done when `nix flake check` passes (clippy `--deny warnings`, every test, treefmt) and the glossary of the crate it touches names every new term.

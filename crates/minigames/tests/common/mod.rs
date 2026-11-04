@@ -1,5 +1,5 @@
 //! The ChunkEdge fixture shared by the end-to-end tests: an app with
-//! `MinigamesPlugin`, layers with a spawn, and mock clients living in a lobby.
+//! `MinigamesPlugin`, layers, and mock clients living in a lobby.
 
 // Each test file uses its own part of the fixture.
 #![allow(dead_code)]
@@ -13,12 +13,6 @@ use chunkedge::testing::{self, MockClientHelper, create_mock_client};
 use minigames::prelude::*;
 
 pub const BEDWARS: GameSlug = GameSlug::from_static("bedwars");
-
-pub const SPAWN: LayerSpawn = LayerSpawn {
-    pos: DVec3::new(0.5, 64.0, 0.5),
-    yaw: 90.0,
-    pitch: 0.0,
-};
 
 pub fn app() -> App {
     let mut app = App::new();
@@ -51,11 +45,11 @@ pub fn layer(app: &mut App) -> LayerBundle {
     layer
 }
 
-/// A layer holding a game of `game`, with players arriving at `SPAWN`.
+/// A layer holding a game of `game`.
 pub fn game_layer(app: &mut App, game: GameSlug, capacity: usize) -> Entity {
     let layer = layer(app);
     app.world_mut()
-        .spawn((layer, GameLayer { game, capacity }, SPAWN))
+        .spawn((layer, GameLayer { game, capacity }))
         .id()
 }
 

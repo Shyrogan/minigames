@@ -4,19 +4,19 @@ use chunkedge::prelude::*;
 
 /// The [`GameLayer`](crate::GameLayer) a player is in.
 ///
-/// Inserting it moves the player into that layer, at its `LayerSpawn` (see
+/// Inserting it moves the player into that layer (see
 /// [`GameLayerPlugin`](crate::GameLayerPlugin)). Removing it leaves the
 /// player where it is.
 #[derive(Component, Clone, Copy, PartialEq, Eq, Debug)]
 #[relationship(relationship_target = GamePlayers)]
-pub struct InGame(pub Entity);
+pub struct Playing(pub Entity);
 
-/// The players in a game layer, kept in sync by Bevy from [`InGame`]. Absent
+/// The players in a game layer, kept in sync by Bevy from [`Playing`]. Absent
 /// while the layer is empty.
 ///
-/// Despawning the layer removes `InGame` from its players but keeps them.
+/// Despawning the layer removes `Playing` from its players but keeps them.
 #[derive(Component, Debug)]
-#[relationship_target(relationship = InGame)]
+#[relationship_target(relationship = Playing)]
 pub struct GamePlayers(Vec<Entity>);
 
 impl GamePlayers {

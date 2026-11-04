@@ -5,7 +5,7 @@
 use chunkedge::prelude::*;
 use minigames_core::{GameLayer, GameSlug};
 
-use crate::join::JoinQueue;
+use crate::message::QueueMessage;
 use crate::plugin::QueuePlugin;
 
 pub const BEDWARS: GameSlug = GameSlug::from_static("bedwars");
@@ -21,15 +21,15 @@ pub fn game_layer(app: &mut App, game: GameSlug, capacity: usize) -> Entity {
     app.world_mut().spawn(GameLayer { game, capacity }).id()
 }
 
-/// Sends a [`JoinQueue`] and runs a tick.
+/// Sends a [`QueueMessage::Join`] and runs a tick.
 pub fn join(app: &mut App, game: GameSlug, players: &[Entity]) {
     let players = players.to_vec();
     app.world_mut()
-        .resource_mut::<Messages<JoinQueue>>()
-        .write(JoinQueue { game, players });
+        .resource_mut::<Messages<QueueMessage>>()
+        .write(QueueMessage::Join { game, players });
     app.update();
 }
 
 mod assign;
-mod entry;
 mod join;
+mod squad;

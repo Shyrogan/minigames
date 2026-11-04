@@ -5,7 +5,7 @@ mod common;
 
 use chunkedge::prelude::*;
 use chunkedge::protocol::packets::play::{LevelChunkWithLightS2c, RespawnS2c};
-use common::{BEDWARS, SPAWN, app, connect, game_layer, lobby, waiting};
+use common::{BEDWARS, app, connect, game_layer, lobby, waiting};
 use minigames::prelude::*;
 
 #[test]
@@ -15,7 +15,7 @@ fn entering_a_game_respawns_the_client_in_its_layer() {
     let bedwars = game_layer(&mut app, BEDWARS, 4);
     let (alice, mut helper) = connect(&mut app, lobby, "alice");
 
-    app.world_mut().entity_mut(alice).insert(InGame(bedwars));
+    app.world_mut().entity_mut(alice).insert(Playing(bedwars));
     app.update();
 
     // As in ChunkEdge's own layer switching: the respawn clears the client's
@@ -27,7 +27,6 @@ fn entering_a_game_respawns_the_client_in_its_layer() {
         app.world().get::<VisibleChunkLayer>(alice).unwrap().0,
         bedwars
     );
-    assert_eq!(app.world().get::<Position>(alice).unwrap().0, SPAWN.pos);
 }
 
 #[test]
@@ -38,7 +37,7 @@ fn a_disconnected_player_frees_its_slot() {
     let (alice, _) = connect(&mut app, lobby, "alice");
     let (bob, _) = connect(&mut app, lobby, "bob");
     for player in [alice, bob] {
-        app.world_mut().entity_mut(player).insert(InGame(bedwars));
+        app.world_mut().entity_mut(player).insert(Playing(bedwars));
     }
     app.update();
     assert_eq!(waiting(&mut app, bedwars), (2, 0));

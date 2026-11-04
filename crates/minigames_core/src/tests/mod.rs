@@ -7,16 +7,9 @@ use crate::game::Game;
 use crate::layer::GameLayer;
 use crate::phase::{GamePhase, Waiting};
 use crate::slug::GameSlug;
-use crate::spawn::LayerSpawn;
 use crate::transition::{GamePhaseCommands, Next};
 
 pub const BEDWARS: GameSlug = GameSlug::from_static("bedwars");
-
-pub const SPAWN: LayerSpawn = LayerSpawn {
-    pos: DVec3::new(0.5, 64.0, 0.5),
-    yaw: 180.0,
-    pitch: 0.0,
-};
 
 pub fn game_layer(world: &mut World, capacity: usize) -> Entity {
     world

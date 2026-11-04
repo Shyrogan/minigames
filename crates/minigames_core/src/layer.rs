@@ -7,8 +7,7 @@ use crate::slug::GameSlug;
 
 /// Marks a layer entity (a [`LayerBundle`]) as the layer of one game of
 /// `game`, holding at most `capacity` players. A new game starts in
-/// [`Waiting`]. Give the layer a [`LayerSpawn`](crate::LayerSpawn) too, or
-/// players can't enter it.
+/// [`Waiting`].
 ///
 /// Nothing enforces `capacity`: check the free slots of a
 /// [`Game<Waiting>`](crate::Game) before adding a player.

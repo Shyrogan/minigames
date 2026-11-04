@@ -1,27 +1,27 @@
 use super::{BEDWARS, SKYWARS, app, join};
-use crate::entry::EntryMembers;
+use crate::squad::Squadmates;
 use crate::*;
 use chunkedge::prelude::*;
 use minigames_core::*;
 
-fn entry(app: &App, player: Entity) -> Option<Entity> {
+fn squad(app: &App, player: Entity) -> Option<Entity> {
     app.world().get::<Queued>(player).map(|queued| queued.0)
 }
 
 #[test]
-fn a_party_shares_one_entry() {
+fn players_joining_together_form_one_squad() {
     let mut app = app();
-    let party = [
+    let players = [
         app.world_mut().spawn_empty().id(),
         app.world_mut().spawn_empty().id(),
     ];
-    join(&mut app, BEDWARS, &party);
+    join(&mut app, BEDWARS, &players);
 
-    let entry = entry(&app, party[0]).unwrap();
-    assert_eq!(app.world().get::<QueueEntry>(entry).unwrap().game, BEDWARS);
+    let squad = squad(&app, players[0]).unwrap();
+    assert_eq!(app.world().get::<Squad>(squad).unwrap().game, BEDWARS);
     assert_eq!(
-        app.world().get::<EntryMembers>(entry).unwrap().players(),
-        party
+        app.world().get::<Squadmates>(squad).unwrap().players(),
+        players
     );
 }
 
@@ -30,12 +30,12 @@ fn joining_another_queue_leaves_the_first() {
     let mut app = app();
     let alice = app.world_mut().spawn_empty().id();
     join(&mut app, BEDWARS, &[alice]);
-    let first = entry(&app, alice).unwrap();
+    let first = squad(&app, alice).unwrap();
 
     join(&mut app, SKYWARS, &[alice]);
 
-    let second = entry(&app, alice).unwrap();
-    assert_eq!(app.world().get::<QueueEntry>(second).unwrap().game, SKYWARS);
+    let second = squad(&app, alice).unwrap();
+    assert_eq!(app.world().get::<Squad>(second).unwrap().game, SKYWARS);
     assert!(app.world().get_entity(first).is_err());
 }
 
@@ -43,9 +43,9 @@ fn joining_another_queue_leaves_the_first() {
 fn a_player_in_a_game_cant_queue() {
     let mut app = app();
     let layer = app.world_mut().spawn_empty().id();
-    let alice = app.world_mut().spawn(InGame(layer)).id();
+    let alice = app.world_mut().spawn(Playing(layer)).id();
     let bob = app.world_mut().spawn_empty().id();
     join(&mut app, BEDWARS, &[bob, alice]);
 
-    assert_eq!(entry(&app, bob), None);
+    assert_eq!(squad(&app, bob), None);
 }
