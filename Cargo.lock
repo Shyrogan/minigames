@@ -1948,6 +1948,7 @@ version = "0.1.0"
 dependencies = [
  "chunkedge",
  "minigames_core",
+ "minigames_queue",
 ]
 
 [[package]]
@@ -1955,6 +1956,14 @@ name = "minigames_core"
 version = "0.1.0"
 dependencies = [
  "chunkedge",
+]
+
+[[package]]
+name = "minigames_queue"
+version = "0.1.0"
+dependencies = [
+ "chunkedge",
+ "minigames_core",
 ]
 
 [[package]]

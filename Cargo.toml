@@ -14,3 +14,4 @@ license = "MIT"
 chunkedge = { git = "https://github.com/ChunkEdge/ChunkEdge", branch = "main" }
 
 minigames_core = { path = "crates/minigames_core" }
+minigames_queue = { path = "crates/minigames_queue" }

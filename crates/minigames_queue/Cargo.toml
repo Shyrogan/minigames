@@ -1,0 +1,9 @@
+[package]
+name = "minigames_queue"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+chunkedge.workspace = true
+minigames_core.workspace = true

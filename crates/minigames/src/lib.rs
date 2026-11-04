@@ -1,5 +1,5 @@
 //! Mini game server management for ChunkEdge: layers that hold games, and
-//! later a player queue and moving queued players into a game with room.
+//! queues that move players into a game with room.
 //!
 //! Glob import the [`prelude`] next to ChunkEdge's:
 //!
@@ -11,6 +11,11 @@
 //!
 //! fn add_minigames(app: &mut App) {
 //!     app.add_plugins(MinigamesPlugin);
+//! }
+//!
+//! /// Queues a party; the queue moves it into a waiting game with room.
+//! fn queue_party(mut joins: MessageWriter<JoinQueue>, party: Vec<Entity>) {
+//!     joins.write(JoinQueue { game: BEDWARS, players: party });
 //! }
 //!
 //! fn start_full_games(mut commands: Commands, games: Query<(Entity, Game<Waiting>)>) {
@@ -25,6 +30,7 @@
 use chunkedge::prelude::*;
 
 pub use minigames_core::*;
+pub use minigames_queue as queue;
 
 /// The most used items of `minigames`. Holds only this library's items:
 /// glob import [`chunkedge::prelude`] beside it.
@@ -40,15 +46,16 @@ pub mod prelude {
         Ending, Game, GameItem, GameLayer, GameLayerPlugin, GamePhase, GamePlayers, GameSlug,
         InGame, InvalidGameSlug, LayerSpawn, Next, Running, Waiting,
     };
+    pub use minigames_queue::{EntryMembers, JoinQueue, QueueEntry, QueuePlugin, Queued};
 
     pub use super::MinigamesPlugin;
 }
 
-/// Adds mini game management to a ChunkEdge app: game layers.
+/// Adds mini game management to a ChunkEdge app: game layers and queues.
 pub struct MinigamesPlugin;
 
 impl Plugin for MinigamesPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(GameLayerPlugin);
+        app.add_plugins((GameLayerPlugin, minigames_queue::QueuePlugin));
     }
 }
