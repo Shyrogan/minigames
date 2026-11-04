@@ -1,0 +1,13 @@
+[package]
+name = "minigames"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Queues players and moves them into mini game worlds on a ChunkEdge server."
+
+[dependencies]
+chunkedge.workspace = true
+minigames_core.workspace = true
+
+[dev-dependencies]
+chunkedge = { workspace = true, features = ["testing"] }

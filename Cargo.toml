@@ -1,0 +1,16 @@
+[workspace]
+members = ["crates/*"]
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+
+[workspace.dependencies]
+# The crates.io `chunkedge` 0.1.0 is an empty placeholder; upstream asks to use
+# the git repository until a major version ships. Its prelude re-exports
+# bevy_app and bevy_ecs (0.19).
+chunkedge = { git = "https://github.com/ChunkEdge/ChunkEdge", branch = "main" }
+
+minigames_core = { path = "crates/minigames_core" }
