@@ -5,14 +5,14 @@ mod common;
 
 use chunkedge::prelude::*;
 use chunkedge::protocol::packets::play::{LevelChunkWithLightS2c, RespawnS2c};
-use common::{BEDWARS, app, connect, game_layer, lobby, waiting};
+use common::{Bedwars, app, connect, game_layer, lobby, waiting};
 use minigames::prelude::*;
 
 #[test]
 fn entering_a_game_respawns_the_client_in_its_layer() {
     let mut app = app();
     let lobby = lobby(&mut app);
-    let bedwars = game_layer(&mut app, BEDWARS, 4);
+    let bedwars = game_layer::<Bedwars>(&mut app, 4);
     let (alice, mut helper) = connect(&mut app, lobby, "alice");
 
     app.world_mut().entity_mut(alice).insert(Playing(bedwars));
@@ -33,7 +33,7 @@ fn entering_a_game_respawns_the_client_in_its_layer() {
 fn a_disconnected_player_frees_its_slot() {
     let mut app = app();
     let lobby = lobby(&mut app);
-    let bedwars = game_layer(&mut app, BEDWARS, 2);
+    let bedwars = game_layer::<Bedwars>(&mut app, 2);
     let (alice, _) = connect(&mut app, lobby, "alice");
     let (bob, _) = connect(&mut app, lobby, "bob");
     for player in [alice, bob] {

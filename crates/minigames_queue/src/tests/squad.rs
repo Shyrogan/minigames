@@ -1,24 +1,36 @@
+use super::{Bedwars, app, game_layer, has, join, player};
 use crate::*;
-use chunkedge::prelude::*;
-
-use super::BEDWARS;
-use crate::squad::{QueueTickets, despawn_empty_squad};
+use minigames_game::*;
 
 #[test]
-fn a_squad_goes_away_with_its_last_player() {
-    let mut world = World::new();
-    world.add_observer(despawn_empty_squad);
-    let squad = world
-        .spawn(Squad::new(BEDWARS, &mut QueueTickets::default()))
-        .id();
-    let alice = world.spawn(Queued(squad)).id();
-    let bob = world.spawn(Queued(squad)).id();
+fn a_despawned_player_frees_its_squad() {
+    let mut app = app();
+    let alice = player(&mut app);
+    let bob = player(&mut app);
+    join::<Bedwars>(&mut app, &[alice, bob]);
+    let squad = app.world().get::<Queued<Bedwars>>(bob).unwrap().squad();
 
-    world.entity_mut(alice).remove::<Queued>();
-    world.flush();
-    assert_eq!(world.get::<Squadmates>(squad).unwrap().players(), [bob]);
+    app.world_mut().despawn(alice);
+    app.update();
 
-    world.despawn(bob);
-    world.flush();
-    assert!(world.get_entity(squad).is_err());
+    assert!(has::<Free>(&app, bob));
+    assert!(app.world().get_entity(squad).is_err());
+}
+
+#[test]
+fn a_game_taking_a_queued_player_frees_its_squad() {
+    let mut app = app();
+    let arena = game_layer::<Bedwars>(&mut app, 1);
+    // The arena is full, so the queue places nobody.
+    let carol = player(&mut app);
+    app.world_mut().entity_mut(carol).insert(Playing(arena));
+    let alice = player(&mut app);
+    let bob = player(&mut app);
+    join::<Bedwars>(&mut app, &[alice, bob]);
+
+    app.world_mut().entity_mut(alice).insert(Playing(arena));
+    app.update();
+
+    assert!(has::<Busy>(&app, alice));
+    assert!(has::<Free>(&app, bob));
 }

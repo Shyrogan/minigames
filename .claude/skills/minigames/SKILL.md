@@ -19,6 +19,8 @@ The library's core idea: a game's phase is a **type**, so the compiler rejects c
 - Put a phase-only capability on that phase's item: `impl GameItem<'_, '_, Waiting> { fn free_slots(..) }`. A capability that only makes sense in one phase is unreachable from the others, with no runtime check.
 - Move a game on with `commands.entity(layer).transition::<From, To>()`. The legal edges are the `Next` impls in `transition.rs`; adding an edge is adding an impl. `transition` is a no-op when the game already left `From`, so concurrent systems never skip a phase.
 - The phase set is sealed in `phase.rs`, because the queue relies on `Waiting` meaning "takes players". Mini-game-specific stages belong in their own marker components inside `Running`.
+- Mini games are types too ([ADR 0001](../../../docs/adr/0001-mini-games-are-types.md)): `impl MiniGame for Bedwars`, whose `SLUG` names it. Players and squads carry the type (`Queued<Bedwars>`, `Squad<Bedwars>`), and each mini game adds its queue with `GameQueuePlugin::<G>`. Game layers keep the slug, built only through `GameLayer::new::<G>`, and are filtered with `layer.is::<G>()`.
+- A player's queue status is a type as well: exactly one of `Free`, `Queued<G>` and `Busy`. The queue alone moves players between them, on `QueueMessage` and on `Playing`; the edges are in `crates/minigames_queue/docs/queue-status.md`. `Queued<G>` is generic, so its exclusivity with `Free` and `Busy` lives in observers each `GameQueuePlugin::<G>` adds, not in a `keep_only` hook.
 
 ## Invariants
 
@@ -26,9 +28,9 @@ The library's core idea: a game's phase is a **type**, so the compiler rejects c
 - **One game per player.** `Playing(layer)` is a Bevy relationship whose target `GamePlayers` Bevy keeps in sync; despawning a layer strips `Playing` from its players and keeps the players.
 - **Inserting `Playing` moves the player into the game layer** (`enter.rs`): it repoints `EntityLayerId` and `VisibleChunkLayer` and swaps the old layer for the game layer in `VisibleEntityLayers` (other visible layers stay). ChunkEdge then sends the respawn. Use ChunkEdge's vocabulary: a world is a *layer*.
 - **The library owns membership and layers, nothing more.** Positions, looks and spawn points belong to ChunkEdge (`Position`, `Look`, the client's `RespawnPosition`) and are set by the game. Before adding a concept, check whether ChunkEdge already has it, and reuse it.
-- **Queued or in a game, never both.** A squad with a player in a game can't queue, and the queue removes `Queued` as it inserts `Playing`.
+- **One queue status per player.** Busy exactly while `Playing`, free when a client joins and when it leaves its game or its squad, queued only from free. A squad is never split: when one of its players leaves the queue, despawns or is taken into a game directly, the rest are freed (`dissolve_squad`); the queue marks a squad `Placed` before moving it into a game so placing it doesn't dissolve it.
 - **Capacity is advisory.** Whoever adds a player checks `free_slots()` of the `Game<Waiting>` first; `minigames_game` counts over-capacity layers as zero free slots.
-- **Slugs are valid by construction.** Known games are `const X: GameSlug = GameSlug::from_static("x")`, checked at build time; runtime input goes through `GameSlug::new`.
+- **Slugs are valid by construction.** A mini game's `SLUG` is `GameSlug::from_static("x")`, checked at build time; runtime input goes through `GameSlug::new`. Two mini games can't share a slug: `GameQueuePlugin` panics.
 
 ## ChunkEdge and Bevy 0.19 gotchas
 
@@ -36,17 +38,19 @@ The library's core idea: a game's phase is a **type**, so the compiler rejects c
 - Import Bevy through ChunkEdge: `chunkedge::prelude::*`, and `chunkedge::prelude::bevy_ecs::…` for paths outside the prelude. No crate here depends on `bevy_ecs` directly.
 - A `#[derive(QueryData)]` field can't be a filter: `With<P>` fails to compile. Use a private `&'static P` field; markers are zero-sized.
 - A `RelationshipTarget` is absent while empty, so read `GamePlayers` as `Option<&GamePlayers>`.
+- Relationships can be generic: `#[relationship(relationship_target = Squadmates<G>)]` on a struct with a `#[relationship]` field and a `PhantomData<fn() -> G>`. `squad.rs` reacts to them with observers.
 - ChunkEdge has no join or leave events. A join is `Added<Client>`; a disconnect removes `Client`, and `despawn_disconnected_clients` (which the app adds) marks the entity `Despawned`, despawned in `Last`. React with an `On<Remove, Client>` observer or `RemovedComponents<Client>`.
 - Cross-crate communication uses Messages (`#[derive(Message)]`, `MessageReader`/`MessageWriter`), as ChunkEdge does.
 
 ## Layout
 
 - Workspace crates under `crates/`: `minigames_game` (shared types), one crate per feature (`minigames_queue`), and `minigames` as the umbrella re-exporting them behind `MinigamesPlugin`.
+- Decisions that are hard to reverse, surprising and the result of a trade-off are ADRs in `docs/adr/`.
 - One responsibility per file. `lib.rs` holds only crate docs, `mod` lines and re-exports.
 - Every public item is exported through `minigames::prelude`; the `minigames-prelude` skill has the rules. How a game uses the library is in the `minigames-game` skill; update it when the public API changes.
 - Every stateful object has a state machine in `crates/<crate>/docs/<object>.md`: a mermaid diagram and a table of each edge and when it fires, linked from the crate's glossary. Change it in the same change as the behaviour, and add one for each new stateful object.
 - Unit tests live in one `#[cfg(test)] mod tests` per crate: `src/tests/mod.rs` holds the shared fixtures, and `src/tests/<module>.rs` tests `src/<module>.rs`, with sentence-like names (`a_started_game_has_no_free_slots`), on a bare Bevy `World` or `App`. Source files carry production code only.
-- End-to-end tests with real ChunkEdge mock clients live only in `crates/minigames/tests/`; share the fixture in `tests/common/mod.rs` (`app()`, `lobby`, `game_layer`, `connect`).
+- End-to-end tests with real ChunkEdge mock clients live only in `crates/minigames/tests/`; share the fixture in `tests/common/mod.rs` (`app()`, `lobby`, `game_layer::<G>`, `connect`).
 - Prove a compile-time guarantee with a `compile_fail` doctest beside a passing one, as `GameSlug::from_static` and `transition` do.
 
 ## Done

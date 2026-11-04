@@ -12,7 +12,11 @@ use chunkedge::prelude::*;
 use chunkedge::testing::{self, MockClientHelper, create_mock_client};
 use minigames::prelude::*;
 
-pub const BEDWARS: GameSlug = GameSlug::from_static("bedwars");
+pub struct Bedwars;
+
+impl MiniGame for Bedwars {
+    const SLUG: GameSlug = GameSlug::from_static("bedwars");
+}
 
 pub fn app() -> App {
     let mut app = App::new();
@@ -25,7 +29,7 @@ pub fn app() -> App {
         ..Default::default()
     });
     testing::add_plugins(&mut app);
-    app.add_plugins(MinigamesPlugin)
+    app.add_plugins((MinigamesPlugin, GameQueuePlugin::<Bedwars>::default()))
         .add_systems(Update, despawn_disconnected_clients);
     app.update();
     app
@@ -45,11 +49,11 @@ pub fn layer(app: &mut App) -> LayerBundle {
     layer
 }
 
-/// A layer holding a game of `game`.
-pub fn game_layer(app: &mut App, game: GameSlug, capacity: usize) -> Entity {
+/// A layer holding a game of `G`.
+pub fn game_layer<G: MiniGame>(app: &mut App, capacity: usize) -> Entity {
     let layer = layer(app);
     app.world_mut()
-        .spawn((layer, GameLayer { game, capacity }))
+        .spawn((layer, GameLayer::new::<G>(capacity)))
         .id()
 }
 

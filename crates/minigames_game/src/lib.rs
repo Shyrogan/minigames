@@ -1,8 +1,8 @@
 //! Shared types of the `minigames` crates.
 //!
 //! A *game* is one match of a mini game, held by a ChunkEdge layer entity
-//! marked with [`GameLayer`]. The kind of mini game it plays, such as
-//! `bedwars`, is named by a [`GameSlug`]. Players in a game carry [`Playing`],
+//! marked with [`GameLayer`]. The kind of game it plays, such as bedwars, is
+//! a [`MiniGame`] type, named by a [`GameSlug`]. Players in a game carry [`Playing`],
 //! and the layer lists them in [`GamePlayers`]; inserting `Playing` moves the
 //! player into the layer ([`GameLayerPlugin`]). A game
 //! is in one phase at a time ([`Waiting`], [`Running`] or [`Ending`]), and
@@ -12,6 +12,7 @@
 mod enter;
 mod game;
 mod layer;
+mod mini_game;
 mod phase;
 mod players;
 mod plugin;
@@ -22,6 +23,7 @@ mod transition;
 
 pub use game::{Game, GameItem};
 pub use layer::GameLayer;
+pub use mini_game::MiniGame;
 pub use phase::{Ending, GamePhase, Running, Waiting};
 pub use players::{GamePlayers, Playing};
 pub use plugin::GameLayerPlugin;

@@ -1,10 +1,8 @@
+use super::{Bedwars, Skywars, app, game_layer, has, join, player};
+use crate::assign::first_fit;
 use crate::*;
 use chunkedge::prelude::*;
 use minigames_game::*;
-
-use super::{BEDWARS, SKYWARS, app, game_layer, join};
-use crate::assign::first_fit;
-use minigames_game::{GamePhaseCommands, Running};
 
 #[test]
 fn first_fit_takes_what_fits_in_order_without_splitting() {
@@ -20,31 +18,34 @@ fn playing(app: &App, player: Entity) -> Option<Entity> {
 #[test]
 fn queued_squads_enter_a_waiting_game_with_room() {
     let mut app = app();
-    let arena = game_layer(&mut app, BEDWARS, 2);
-    let trio: Vec<_> = (0..3).map(|_| app.world_mut().spawn_empty().id()).collect();
-    let alice = app.world_mut().spawn_empty().id();
-    let bob = app.world_mut().spawn_empty().id();
-    join(&mut app, BEDWARS, &trio);
-    join(&mut app, BEDWARS, &[alice]);
-    join(&mut app, BEDWARS, &[bob]);
+    let arena = game_layer::<Bedwars>(&mut app, 2);
+    let trio: Vec<_> = (0..3).map(|_| player(&mut app)).collect();
+    let alice = player(&mut app);
+    let bob = player(&mut app);
+    join::<Bedwars>(&mut app, &trio);
+    join::<Bedwars>(&mut app, &[alice]);
+    join::<Bedwars>(&mut app, &[bob]);
 
-    assert_eq!(playing(&app, alice), Some(arena));
-    assert_eq!(playing(&app, bob), Some(arena));
-    assert!(app.world().get::<Queued>(alice).is_none());
+    for player in [alice, bob] {
+        assert_eq!(playing(&app, player), Some(arena));
+        assert!(has::<Busy>(&app, player));
+        assert!(!has::<Queued<Bedwars>>(&app, player));
+    }
     assert_eq!(playing(&app, trio[0]), None);
+    assert!(has::<Queued<Bedwars>>(&app, trio[0]));
 }
 
 #[test]
-fn players_only_enter_waiting_games_of_their_queue() {
+fn players_only_enter_waiting_games_of_their_mini_game() {
     let mut app = app();
-    let started = game_layer(&mut app, BEDWARS, 4);
+    let started = game_layer::<Bedwars>(&mut app, 4);
     app.world_mut()
         .commands()
         .entity(started)
         .transition::<Waiting, Running>();
-    game_layer(&mut app, SKYWARS, 4);
-    let alice = app.world_mut().spawn_empty().id();
-    join(&mut app, BEDWARS, &[alice]);
+    game_layer::<Skywars>(&mut app, 4);
+    let alice = player(&mut app);
+    join::<Bedwars>(&mut app, &[alice]);
 
     assert_eq!(playing(&app, alice), None);
 }

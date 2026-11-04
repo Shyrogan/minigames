@@ -5,19 +5,19 @@ use chunkedge::prelude::*;
 
 use crate::game::Game;
 use crate::layer::GameLayer;
+use crate::mini_game::MiniGame;
 use crate::phase::{GamePhase, Waiting};
 use crate::slug::GameSlug;
 use crate::transition::{GamePhaseCommands, Next};
 
-pub const BEDWARS: GameSlug = GameSlug::from_static("bedwars");
+pub struct Bedwars;
+
+impl MiniGame for Bedwars {
+    const SLUG: GameSlug = GameSlug::from_static("bedwars");
+}
 
 pub fn game_layer(world: &mut World, capacity: usize) -> Entity {
-    world
-        .spawn(GameLayer {
-            game: BEDWARS,
-            capacity,
-        })
-        .id()
+    world.spawn(GameLayer::new::<Bedwars>(capacity)).id()
 }
 
 /// The player count of a game in phase `P`, or `None` if the game isn't in
