@@ -1,27 +1,32 @@
 ---
 name: minigames
-description: Design rules, invariants and ChunkEdge/Bevy 0.19 gotchas of the `minigames` library (mini game worlds, phases, players in games, the upcoming queue and placement). Load before writing or reviewing any code in this repo, or designing a new crate for it.
+description: Design rules, invariants and ChunkEdge/Bevy 0.19 gotchas of the `minigames` library (game layers, phases, players in games, the queue). Load before writing or reviewing any code in this repo, or designing a new crate for it.
 ---
 
 # minigames
 
-A Rust library for a ChunkEdge mini game server: worlds that hold games, and later a queue that moves players into a game with room. Terms (game, game slug, game world, phase, player in game) are defined in [`GLOSSARY.md`](../../../GLOSSARY.md); use them exactly, in code and prose.
+A Rust library for a ChunkEdge mini game server: layers that hold games, and a queue that moves parties into a game with room. Terms (game, game slug, game layer, layer spawn, phase, player in game, party, queue entry) are defined in [`GLOSSARY.md`](../../../GLOSSARY.md); use them exactly, in code and prose.
+
+## Minimal by default
+
+The idea is simple; keep the code and tests that small. Build the fewest features that deliver the behaviour asked for, and let state live in components a caller can read (`Queued`, `InGame`) rather than adding report messages, configuration, reasons or extra system sets. Test each behaviour once, at the lowest level that shows it. Propose anything beyond that to the user before writing it.
 
 ## Phase-typed design
 
-The library's core idea: a game's phase is a **type**, so the compiler rejects code that acts on a game in the wrong phase. Each phase is a zero-sized marker component (`Waiting`, `Running`, `Ending`), and a game world holds exactly one.
+The library's core idea: a game's phase is a **type**, so the compiler rejects code that acts on a game in the wrong phase. Each phase is a zero-sized marker component (`Waiting`, `Running`, `Ending`), and a game layer holds exactly one.
 
 - Select games by phase in the query type: `Query<Game<Waiting>>`. A system handles one phase; write a generic system over `P: GamePhase` when the logic is the same in every phase.
 - Put a phase-only capability on that phase's item: `impl GameItem<'_, '_, Waiting> { fn free_slots(..) }`. A capability that only makes sense in one phase is unreachable from the others, with no runtime check.
-- Move a game on with `commands.entity(world).transition::<From, To>()`. The legal edges are the `Next` impls in `transition.rs`; adding an edge is adding an impl. `transition` is a no-op when the game already left `From`, so concurrent systems never skip a phase.
-- The phase set is sealed in `phase.rs`, because the queue and placement rely on `Waiting` meaning "takes players". Mini-game-specific stages belong in their own marker components inside `Running`.
+- Move a game on with `commands.entity(layer).transition::<From, To>()`. The legal edges are the `Next` impls in `transition.rs`; adding an edge is adding an impl. `transition` is a no-op when the game already left `From`, so concurrent systems never skip a phase.
+- The phase set is sealed in `phase.rs`, because the queue relies on `Waiting` meaning "takes players". Mini-game-specific stages belong in their own marker components inside `Running`.
 
 ## Invariants
 
-- **One phase per world.** The `keep_only` insert hook removes the other phases, so even a hand-inserted marker keeps the invariant.
-- **One game per player.** `InGame(world)` is a Bevy relationship whose target `GamePlayers` Bevy keeps in sync; despawning a world strips `InGame` from its players and keeps the players.
-- **`InGame` is membership only.** Placing a player in a game also switches its layers: `EntityLayerId`, `VisibleChunkLayer`, `VisibleEntityLayers` (clear, then insert the world), `Position` and `RespawnPosition`, before `UpdateClientsSet` in `PostUpdate`. Changing `VisibleChunkLayer` makes ChunkEdge send the respawn.
-- **Capacity is advisory.** Whoever adds a player checks `free_slots()` of the `Game<Waiting>` first; core counts over-capacity worlds as zero free slots.
+- **One phase per layer.** The `keep_only` insert hook removes the other phases, so even a hand-inserted marker keeps the invariant.
+- **One game per player.** `InGame(layer)` is a Bevy relationship whose target `GamePlayers` Bevy keeps in sync; despawning a layer strips `InGame` from its players and keeps the players.
+- **Inserting `InGame` moves the player** into the game layer, at its `LayerSpawn` (`enter.rs`): it repoints `EntityLayerId` and `VisibleChunkLayer`, swaps the old layer for the game layer in `VisibleEntityLayers` (other visible layers stay), and sets `Position`, `Look` and `RespawnPosition`. ChunkEdge then sends the respawn. Use ChunkEdge's vocabulary: a world is a *layer*.
+- **Queued or in a game, never both.** A party with a player in a game can't queue, and the queue removes `Queued` as it inserts `InGame`.
+- **Capacity is advisory.** Whoever adds a player checks `free_slots()` of the `Game<Waiting>` first; core counts over-capacity layers as zero free slots.
 - **Slugs are valid by construction.** Known games are `const X: GameSlug = GameSlug::from_static("x")`, checked at build time; runtime input goes through `GameSlug::new`.
 
 ## ChunkEdge and Bevy 0.19 gotchas
@@ -35,11 +40,11 @@ The library's core idea: a game's phase is a **type**, so the compiler rejects c
 
 ## Layout
 
-- Workspace crates under `crates/`: `minigames_core` (shared types), one crate per feature (the queue next), and `minigames` as the umbrella re-exporting them behind `MinigamesPlugin`.
+- Workspace crates under `crates/`: `minigames_core` (shared types), one crate per feature (`minigames_queue`), and `minigames` as the umbrella re-exporting them behind `MinigamesPlugin`.
 - One responsibility per file. `lib.rs` holds only crate docs, `mod` lines and re-exports.
-- Every public item is exported through `minigames::prelude`; the `minigames-prelude` skill has the rules.
-- Each file carries its own `#[cfg(test)] mod tests` with sentence-like names (`a_started_game_has_no_free_slots`), on a bare Bevy `World`. Shared fixtures live in `test_support.rs`.
-- End-to-end tests with real ChunkEdge mock clients live only in `crates/minigames/tests/`; copy the fixture in `tests/world.rs` (`app()`, `game_world`, `join`).
+- Every public item is exported through `minigames::prelude`; the `minigames-prelude` skill has the rules. How a game uses the library is in the `minigames-game` skill; update it when the public API changes.
+- Unit tests live in one `#[cfg(test)] mod tests` per crate: `src/tests/mod.rs` holds the shared fixtures, and `src/tests/<module>.rs` tests `src/<module>.rs`, with sentence-like names (`a_started_game_has_no_free_slots`), on a bare Bevy `World` or `App`. Source files carry production code only.
+- End-to-end tests with real ChunkEdge mock clients live only in `crates/minigames/tests/`; share the fixture in `tests/common/mod.rs` (`app()`, `lobby`, `game_layer`, `connect`).
 - Prove a compile-time guarantee with a `compile_fail` doctest beside a passing one, as `GameSlug::from_static` and `transition` do.
 
 ## Done
