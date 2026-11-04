@@ -1,18 +1,26 @@
-//! Fixtures shared by the unit tests: game worlds on a bare Bevy `World`.
+//! Unit tests of the crate, one file per module, and the fixtures they share:
+//! game layers on a bare Bevy `World`.
 
 use chunkedge::prelude::*;
 
 use crate::game::Game;
+use crate::layer::GameLayer;
 use crate::phase::{GamePhase, Waiting};
 use crate::slug::GameSlug;
+use crate::spawn::LayerSpawn;
 use crate::transition::{GamePhaseCommands, Next};
-use crate::world::GameWorld;
 
-const BEDWARS: GameSlug = GameSlug::from_static("bedwars");
+pub const BEDWARS: GameSlug = GameSlug::from_static("bedwars");
 
-pub fn world_of(world: &mut World, capacity: usize) -> Entity {
+pub const SPAWN: LayerSpawn = LayerSpawn {
+    pos: DVec3::new(0.5, 64.0, 0.5),
+    yaw: 180.0,
+    pitch: 0.0,
+};
+
+pub fn game_layer(world: &mut World, capacity: usize) -> Entity {
     world
-        .spawn(GameWorld {
+        .spawn(GameLayer {
             game: BEDWARS,
             capacity,
         })
@@ -36,3 +44,9 @@ pub fn transition<From: Next<To>, To: GamePhase>(world: &mut World, game: Entity
     world.commands().entity(game).transition::<From, To>();
     world.flush();
 }
+
+mod enter;
+mod game;
+mod players;
+mod slug;
+mod transition;

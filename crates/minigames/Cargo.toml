@@ -3,7 +3,7 @@ name = "minigames"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "Queues players and moves them into mini game worlds on a ChunkEdge server."
+description = "Queues players and moves them into mini game layers on a ChunkEdge server."
 
 [dependencies]
 chunkedge.workspace = true
