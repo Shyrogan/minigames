@@ -6,4 +6,4 @@ license.workspace = true
 
 [dependencies]
 chunkedge.workspace = true
-minigames_core.workspace = true
+minigames_game.workspace = true

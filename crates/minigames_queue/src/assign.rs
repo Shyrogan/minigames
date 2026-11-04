@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 
 use chunkedge::prelude::*;
-use minigames_core::{Game, GameSlug, Playing, Waiting};
+use minigames_game::{Game, GameSlug, Playing, Waiting};
 
 use crate::squad::{Queued, Squad, Squadmates};
 

@@ -3,7 +3,7 @@
 //! entities as players.
 
 use chunkedge::prelude::*;
-use minigames_core::{GameLayer, GameSlug};
+use minigames_game::{GameLayer, GameSlug};
 
 use crate::message::QueueMessage;
 use crate::plugin::QueuePlugin;

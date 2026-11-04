@@ -1947,12 +1947,12 @@ name = "minigames"
 version = "0.1.0"
 dependencies = [
  "chunkedge",
- "minigames_core",
+ "minigames_game",
  "minigames_queue",
 ]
 
 [[package]]
-name = "minigames_core"
+name = "minigames_game"
 version = "0.1.0"
 dependencies = [
  "chunkedge",
@@ -1963,7 +1963,7 @@ name = "minigames_queue"
 version = "0.1.0"
 dependencies = [
  "chunkedge",
- "minigames_core",
+ "minigames_game",
 ]
 
 [[package]]

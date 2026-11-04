@@ -13,5 +13,5 @@ license = "MIT"
 # bevy_app and bevy_ecs (0.19).
 chunkedge = { git = "https://github.com/ChunkEdge/ChunkEdge", branch = "main" }
 
-minigames_core = { path = "crates/minigames_core" }
+minigames_game = { path = "crates/minigames_game" }
 minigames_queue = { path = "crates/minigames_queue" }

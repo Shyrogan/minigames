@@ -22,7 +22,7 @@ pub trait GamePhaseCommands {
     ///
     /// ```
     /// # use chunkedge::prelude::*;
-    /// # use minigames_core::{GamePhaseCommands, Running, Waiting};
+    /// # use minigames_game::{GamePhaseCommands, Running, Waiting};
     /// fn start(mut commands: Commands, game: Entity) {
     ///     commands.entity(game).transition::<Waiting, Running>();
     /// }
@@ -30,7 +30,7 @@ pub trait GamePhaseCommands {
     ///
     /// ```compile_fail
     /// # use chunkedge::prelude::*;
-    /// # use minigames_core::{Ending, GamePhaseCommands, Waiting};
+    /// # use minigames_game::{Ending, GamePhaseCommands, Waiting};
     /// fn reopen(mut commands: Commands, game: Entity) {
     ///     commands.entity(game).transition::<Ending, Waiting>();
     /// }

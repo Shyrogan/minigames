@@ -80,7 +80,7 @@ The server adds `MinigamesPlugin` once, then each game's plugin.
 
 - **Filter by slug.** `Game<P>` matches every game in phase `P`, whatever its slug, so a game's systems check `game.layer.game == BEDWARS`.
 - **Choose a phase by type, not by branching.** A system that only runs for waiting games queries `Game<Waiting>`; free slots exist only there. An illegal transition, such as `Ending → Waiting`, doesn't compile.
-- **Let the queue move players.** Players enter a game through `QueueMessage::Join`, or through `Playing(layer)` inserted directly, for example when an admin sends a player in. Either way core does the layer switch. A squad with a player already in a game is ignored by the queue.
+- **Let the queue move players.** Players enter a game through `QueueMessage::Join`, or through `Playing(layer)` inserted directly, for example when an admin sends a player in. Either way `minigames_game` does the layer switch. A squad with a player already in a game is ignored by the queue.
 - **Read who is playing** from `GamePlayers` on the layer (`game.player_count()`, `game.players`), and a player's game from `Playing`.
 - **Not in the library yet:** returning players to a lobby after a game, minimum-player rules and countdowns. The lobby return is the gap that matters: without it, a game must move its players out before it despawns its layer. Ask the user before building any of these, in the game or in the library.
 

@@ -1,7 +1,7 @@
 //! Putting squads in a queue.
 
 use chunkedge::prelude::*;
-use minigames_core::Playing;
+use minigames_game::Playing;
 
 use crate::message::QueueMessage;
 use crate::squad::{QueueTickets, Queued, Squad};

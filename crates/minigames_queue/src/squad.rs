@@ -1,7 +1,7 @@
 //! Squads: one entity per squad waiting for a game, and its squadmates.
 
 use chunkedge::prelude::*;
-use minigames_core::GameSlug;
+use minigames_game::GameSlug;
 
 /// A squad waiting for a game of `game`, on its own entity. Squads are
 /// served in ascending [`ticket`](Self::ticket) order.

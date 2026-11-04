@@ -7,7 +7,7 @@ description = "Queues players and moves them into mini game layers on a ChunkEdg
 
 [dependencies]
 chunkedge.workspace = true
-minigames_core.workspace = true
+minigames_game.workspace = true
 minigames_queue.workspace = true
 
 [dev-dependencies]

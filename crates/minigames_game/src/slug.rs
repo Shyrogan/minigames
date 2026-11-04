@@ -28,12 +28,12 @@ impl GameSlug {
     /// compile error when used in a `const`:
     ///
     /// ```
-    /// # use minigames_core::GameSlug;
+    /// # use minigames_game::GameSlug;
     /// const BEDWARS: GameSlug = GameSlug::from_static("bedwars");
     /// ```
     ///
     /// ```compile_fail
-    /// # use minigames_core::GameSlug;
+    /// # use minigames_game::GameSlug;
     /// const BEDWARS: GameSlug = GameSlug::from_static("Bedwars");
     /// ```
     pub const fn from_static(slug: &'static str) -> Self {

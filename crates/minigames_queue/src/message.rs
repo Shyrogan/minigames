@@ -1,7 +1,7 @@
 //! The messages the queue reads.
 
 use chunkedge::prelude::*;
-use minigames_core::GameSlug;
+use minigames_game::GameSlug;
 
 /// A request to the queue.
 #[derive(Message, Clone, Debug)]

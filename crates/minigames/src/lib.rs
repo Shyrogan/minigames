@@ -29,7 +29,7 @@
 
 use chunkedge::prelude::*;
 
-pub use minigames_core::*;
+pub use minigames_game::*;
 pub use minigames_queue as queue;
 
 /// The most used items of `minigames`. Holds only this library's items:
@@ -41,8 +41,8 @@ pub use minigames_queue as queue;
 /// use minigames::prelude::*;
 /// ```
 pub mod prelude {
-    pub use minigames_core::GamePhaseCommands as _;
-    pub use minigames_core::{
+    pub use minigames_game::GamePhaseCommands as _;
+    pub use minigames_game::{
         Ending, Game, GameItem, GameLayer, GameLayerPlugin, GamePhase, GamePlayers, GameSlug,
         InvalidGameSlug, Next, Playing, Running, Waiting,
     };

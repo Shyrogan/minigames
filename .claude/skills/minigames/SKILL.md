@@ -27,7 +27,7 @@ The library's core idea: a game's phase is a **type**, so the compiler rejects c
 - **Inserting `Playing` moves the player into the game layer** (`enter.rs`): it repoints `EntityLayerId` and `VisibleChunkLayer` and swaps the old layer for the game layer in `VisibleEntityLayers` (other visible layers stay). ChunkEdge then sends the respawn. Use ChunkEdge's vocabulary: a world is a *layer*.
 - **The library owns membership and layers, nothing more.** Positions, looks and spawn points belong to ChunkEdge (`Position`, `Look`, the client's `RespawnPosition`) and are set by the game. Before adding a concept, check whether ChunkEdge already has it, and reuse it.
 - **Queued or in a game, never both.** A squad with a player in a game can't queue, and the queue removes `Queued` as it inserts `Playing`.
-- **Capacity is advisory.** Whoever adds a player checks `free_slots()` of the `Game<Waiting>` first; core counts over-capacity layers as zero free slots.
+- **Capacity is advisory.** Whoever adds a player checks `free_slots()` of the `Game<Waiting>` first; `minigames_game` counts over-capacity layers as zero free slots.
 - **Slugs are valid by construction.** Known games are `const X: GameSlug = GameSlug::from_static("x")`, checked at build time; runtime input goes through `GameSlug::new`.
 
 ## ChunkEdge and Bevy 0.19 gotchas
@@ -41,7 +41,7 @@ The library's core idea: a game's phase is a **type**, so the compiler rejects c
 
 ## Layout
 
-- Workspace crates under `crates/`: `minigames_core` (shared types), one crate per feature (`minigames_queue`), and `minigames` as the umbrella re-exporting them behind `MinigamesPlugin`.
+- Workspace crates under `crates/`: `minigames_game` (shared types), one crate per feature (`minigames_queue`), and `minigames` as the umbrella re-exporting them behind `MinigamesPlugin`.
 - One responsibility per file. `lib.rs` holds only crate docs, `mod` lines and re-exports.
 - Every public item is exported through `minigames::prelude`; the `minigames-prelude` skill has the rules. How a game uses the library is in the `minigames-game` skill; update it when the public API changes.
 - Every stateful object has a state machine in `crates/<crate>/docs/<object>.md`: a mermaid diagram and a table of each edge and when it fires, linked from the crate's glossary. Change it in the same change as the behaviour, and add one for each new stateful object.

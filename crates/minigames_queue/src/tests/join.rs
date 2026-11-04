@@ -2,7 +2,7 @@ use super::{BEDWARS, SKYWARS, app, join};
 use crate::squad::Squadmates;
 use crate::*;
 use chunkedge::prelude::*;
-use minigames_core::*;
+use minigames_game::*;
 
 fn squad(app: &App, player: Entity) -> Option<Entity> {
     app.world().get::<Queued>(player).map(|queued| queued.0)

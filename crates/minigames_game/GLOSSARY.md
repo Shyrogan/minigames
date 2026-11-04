@@ -1,4 +1,4 @@
-# Core
+# Game
 
 Games and the layers that hold them: what a game is, its phases, and which players are in it. State machines: [game phase](docs/game-phase.md), [player in game](docs/player-in-game.md).
 

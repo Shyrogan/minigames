@@ -1,10 +1,10 @@
 use crate::*;
 use chunkedge::prelude::*;
-use minigames_core::*;
+use minigames_game::*;
 
 use super::{BEDWARS, SKYWARS, app, game_layer, join};
 use crate::assign::first_fit;
-use minigames_core::{GamePhaseCommands, Running};
+use minigames_game::{GamePhaseCommands, Running};
 
 #[test]
 fn first_fit_takes_what_fits_in_order_without_splitting() {

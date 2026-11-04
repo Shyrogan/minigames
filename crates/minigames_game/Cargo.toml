@@ -1,5 +1,5 @@
 [package]
-name = "minigames_core"
+name = "minigames_game"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
